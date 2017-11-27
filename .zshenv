@@ -1,0 +1,5 @@
+export PATH="$HOME/.rbenv/bin:$PATH"
+eval "$(rbenv init -)"
+export PATH="$HOME/bin:$PATH"
+export PATH="$HOME/.zshrc/bin:$PATH"
+export FILTER="$(which fzf-tmux)"
