@@ -1,4 +1,21 @@
 : "coreSetting" && {
+  if [[ ! -n $TMUX && $- == *l* ]]; then
+    # get the IDs
+    ID="`tmux list-sessions`"
+    if [[ -z "$ID" ]]; then
+      tmux new-session
+    fi
+    create_new_session="Create New Session"
+    ID="$ID\n${create_new_session}:"
+    ID="`echo $ID | $FILTER | cut -d: -f1`"
+    if [[ "$ID" = "${create_new_session}" ]]; then
+      tmux new-session
+    elif [[ -n "$ID" ]]; then
+      tmux attach-session -t "$ID"
+    else
+      :  # Start terminal normally
+    fi
+  fi
   unsetopt BG_NICE
 }
 
@@ -22,6 +39,8 @@
   fi
 
   zplug load --verbose
+  export PATH="$HOME/.zplug/bin:$PATH"
+  clear
 }
 
 : "majorSetting" && {
@@ -75,25 +94,41 @@
 
 }
 
-: "anyframe" && {
-  zstyle ":anyframe:selector:" use fzf-tmux
-  bindkey '^x^b' anyframe-widget-checkout-git-branch
-  
-  bindkey '^xr' anyframe-widget-execute-history
-  bindkey '^x^r' anyframe-widget-execute-history
-  
-  bindkey '^xp' anyframe-widget-put-history
-  bindkey '^x^p' anyframe-widget-put-history
-  
-  bindkey '^xg' anyframe-widget-cd-ghq-repository
-  bindkey '^x^g' anyframe-widget-cd-ghq-repository
-  
-  bindkey '^xk' anyframe-widget-kill
-  bindkey '^x^k' anyframe-widget-kill
-  
-  bindkey '^xi' anyframe-widget-insert-git-branch
-  bindkey '^x^i' anyframe-widget-insert-git-branch
-  
-  bindkey '^xf' anyframe-widget-insert-filename
-  bindkey '^x^f' anyframe-widget-insert-filename
+: "fuzzyinc" && {
+  : "anyframe" && {
+    zstyle ":anyframe:selector:" use fzf-tmux
+    bindkey '^x^b' anyframe-widget-checkout-git-branch
+    
+    bindkey '^xr' anyframe-widget-execute-history
+    bindkey '^x^r' anyframe-widget-execute-history
+    
+    bindkey '^xp' anyframe-widget-put-history
+    bindkey '^x^p' anyframe-widget-put-history
+    
+    bindkey '^xg' anyframe-widget-cd-ghq-repository
+    bindkey '^x^g' anyframe-widget-cd-ghq-repository
+    
+    bindkey '^xk' anyframe-widget-kill
+    bindkey '^x^k' anyframe-widget-kill
+    
+    bindkey '^xi' anyframe-widget-insert-git-branch
+    bindkey '^x^i' anyframe-widget-insert-git-branch
+    
+    bindkey '^xf' anyframe-widget-insert-filename
+    bindkey '^x^f' anyframe-widget-insert-filename
+
+  }
+    : "ghq_cd" && {
+      function ghq_cd () {
+        local selected_dir=$(ghq list -p | $FILTER  --query "$LBUFFER")
+        if [ -n "$selected_dir" ]; then
+          BUFFER="builtin cd ${selected_dir}"
+          zle accept-line
+        fi
+        zle clear-screen
+      }
+      zle -N ghq_cd
+      bindkey '^]' ghq_cd
+    } 
+
 }
